@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NP-110 Lincurve Pro — Guided Diagnostic Interface</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B3A6B; --navy-dark: #122852; --navy-light: #234a87;
+    --teal: #005F6B; --teal-light: #007a8a; --teal-pale: #e0f4f6;
+    --accent: #00B4CC; --white: #ffffff; --off-white: #f4f7fb;
+    --gray-100: #eef1f6; --gray-200: #d8dfe9; --gray-400: #8e9ab5;
+    --gray-600: #4a5568; --gray-800: #1e2d45;
+    --success: #00875a; --warning: #f59e0b; --danger: #dc2626;
+    --shadow-sm: 0 1px 3px rgba(27,58,107,0.08);
+    --shadow-md: 0 4px 16px rgba(27,58,107,0.12);
+    --shadow-lg: 0 12px 40px rgba(27,58,107,0.18);
+    --radius: 10px; --radius-sm: 6px; --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--off-white); color: var(--gray-800); min-height: 100vh; }
+  .header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--teal) 100%); color: white; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-lg); }
+  .header-inner { max-width: 1100px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .logo-block { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 200px; }
+  .logo-icon { width: 46px; height: 46px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo-icon svg { width: 30px; height: 30px; }
+  .logo-text h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.03em; line-height: 1.2; }
+  .logo-text p { font-size: 11px; opacity: 0.65; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .lang-select { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: var(--radius-sm); padding: 6px 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; outline: none; }
+  .lang-select option { background: var(--navy-dark); color: white; }
+  .api-banner { background: #fff8e1; border-bottom: 2px solid var(--warning); padding: 12px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .api-banner.hidden { display: none; }
+  .api-banner p { font-size: 13px; color: #7c5a00; flex: 1; min-width: 200px; }
+  .api-key-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .api-key-input { border: 1px solid #f0c040; border-radius: var(--radius-sm); padding: 7px 12px; font-family: 'DM Mono', monospace; font-size: 12px; width: 280px; outline: none; background: white; }
+  .api-key-input:focus { border-color: var(--teal); }
+  .btn-sm { padding: 7px 16px; border-radius: var(--radius-sm); border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-teal { background: var(--teal); color: white; }
+  .btn-teal:hover { background: var(--teal-light); }
+  .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+  .search-wrap { position: relative; margin-bottom: 28px; }
+  .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-400); }
+  .search-bar { width: 100%; padding: 14px 120px 14px 46px; border: 2px solid var(--gray-200); border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; background: white; box-shadow: var(--shadow-sm); transition: all 0.2s; }
+  .search-bar:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,95,107,0.1); }
+  .search-bar::placeholder { color: var(--gray-400); }
+  .search-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); padding: 8px 18px; border: none; border-radius: var(--radius-sm); background: var(--navy); color: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .search-btn:hover { background: var(--teal); }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-400); margin-bottom: 14px; }
+  .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .cat-tile { background: white; border: 2px solid var(--gray-200); border-radius: var(--radius-lg); padding: 22px 16px 18px; cursor: pointer; transition: all 0.2s; text-align: center; box-shadow: var(--shadow-sm); }
+  .cat-tile:hover { border-color: var(--teal); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .cat-tile.active { border-color: var(--navy); background: linear-gradient(135deg, #f0f4fa, #e8f4f6); box-shadow: var(--shadow-md); }
+  .cat-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+  .cat-name { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+  .sub-panel { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: 24px; overflow: hidden; box-shadow: var(--shadow-sm); display: none; animation: slideDown 0.2s ease; }
+  .sub-panel.visible { display: block; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .sub-panel-header { background: linear-gradient(90deg, var(--navy), var(--teal)); padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+  .sub-panel-header h3 { color: white; font-size: 14px; font-weight: 600; }
+  .sub-panel-header button { margin-left: auto; background: rgba(255,255,255,0.15); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .sub-panel-header button:hover { background: rgba(255,255,255,0.3); }
+  .sub-panel-body { padding: 20px; }
+  .sub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .sub-btn { padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); background: var(--off-white); font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--navy); cursor: pointer; text-align: left; transition: all 0.15s; font-weight: 500; }
+  .sub-btn:hover { border-color: var(--teal); background: var(--teal-pale); }
+  .sub-btn.selected { border-color: var(--navy); background: #e8edf7; font-weight: 600; }
+  .error-code-select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; background: var(--off-white); color: var(--navy); cursor: pointer; outline: none; margin-bottom: 10px; }
+  .error-code-select:focus { border-color: var(--teal); }
+  .symptom-input-wrap { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .symptom-input { flex: 1; min-width: 200px; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; background: white; }
+  .symptom-input:focus { border-color: var(--teal); }
+  .response-area { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); display: none; }
+  .response-area.visible { display: block; animation: slideDown 0.25s ease; }
+  .response-header { background: var(--off-white); border-bottom: 1px solid var(--gray-200); padding: 12px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .response-header h4 { font-size: 13px; font-weight: 600; color: var(--navy); flex: 1; }
+  .resp-badge { background: var(--teal-pale); color: var(--teal); border: 1px solid rgba(0,95,107,0.25); border-radius: 20px; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .response-body { padding: 20px 24px; }
+  .response-text { font-size: 14px; line-height: 1.75; color: var(--gray-800); white-space: pre-wrap; }
+  .citation { margin-top: 14px; padding: 8px 14px; background: var(--teal-pale); border-left: 3px solid var(--teal); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 12px; color: var(--teal); font-family: 'DM Mono', monospace; font-weight: 500; display: none; }
+  .response-footer { padding: 12px 20px; border-top: 1px solid var(--gray-100); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .feedback-label { font-size: 12px; color: var(--gray-400); }
+  .feedback-btn { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--gray-200); background: white; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .feedback-btn:hover { border-color: var(--teal); background: var(--teal-pale); }
+  .feedback-btn.active-up { border-color: var(--success); background: #e6f7ef; }
+  .feedback-btn.active-down { border-color: var(--danger); background: #fef2f2; }
+  .support-btn { margin-left: auto; padding: 7px 16px; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s; }
+  .support-btn:hover { background: var(--teal); }
+  .support-btn.hidden { display: none; }
+  .loading-wrap { padding: 36px; text-align: center; display: none; }
+  .loading-wrap.visible { display: block; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--gray-200); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--gray-400); }
+  .error-msg { padding: 14px 20px; background: #fef2f2; border-left: 3px solid var(--danger); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 13px; color: var(--danger); display: none; margin-bottom: 12px; }
+  .error-msg.visible { display: block; }
+  .disclaimer { background: linear-gradient(135deg, #fff8e1, #fffbf0); border: 1px solid #f0c040; border-radius: var(--radius); padding: 14px 18px; font-size: 12px; color: #7c5a00; margin-bottom: 24px; display: flex; gap: 10px; align-items: flex-start; }
+  .disclaimer a { color: var(--teal); }
+  .footer { border-top: 1px solid var(--gray-200); padding: 20px 24px; text-align: center; color: var(--gray-400); font-size: 12px; margin-top: 48px; }
+  .footer a { color: var(--teal); text-decoration: none; }
+  .footer strong { color: var(--navy); }
+  @media (max-width: 600px) { .header-inner { padding: 12px 16px; } .main { padding: 16px; } .category-grid { grid-template-columns: repeat(3, 1fr); } .api-key-input { width: 100%; } .badge { display: none; } .search-bar { padding-right: 80px; } }
+
+  .pw-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0d1f3c,#1B3A6B 55%,#005F6B);display:flex;align-items:center;justify-content:center;padding:24px}
+  .pw-overlay.hidden{display:none}
+  .pw-box{background:#fff;border-radius:20px;padding:48px 40px;width:100%;max-width:420px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.45)}
+  .pw-logo{width:64px;height:64px;background:linear-gradient(135deg,#1B3A6B,#005F6B);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .pw-logo svg{width:38px;height:38px}
+  .pw-box h2{font-size:20px;font-weight:700;color:#1B3A6B;margin-bottom:6px}
+  .pw-sub{font-size:13px;color:#8e9ab5;margin-bottom:28px;line-height:1.5}
+  .pw-input{width:100%;padding:13px 16px;border:2px solid #d8dfe9;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;text-align:center;letter-spacing:.08em;transition:border-color .2s;margin-bottom:12px;display:block;box-sizing:border-box}
+  .pw-input:focus{border-color:#005F6B}
+  .pw-input.shake{animation:pwShake .35s ease;border-color:#dc2626}
+  .pw-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#1B3A6B,#005F6B);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s}
+  .pw-btn:hover{opacity:.88}
+  .pw-err{font-size:12px;color:#dc2626;min-height:20px;margin-top:8px}
+  .pw-footer-text{font-size:11px;color:#c0c8d8;margin-top:22px}
+
+</style>
+</head>
+<body>
+<div class="pw-overlay hidden" id="pwOverlay">
+  <div class="pw-box">
+    <div class="pw-logo">
+      <svg viewBox="0 0 30 30" fill="none"><ellipse cx="15" cy="15" rx="13" ry="8" fill="none" stroke="white" stroke-width="2"/><ellipse cx="15" cy="15" rx="8" ry="5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2"/><circle cx="15" cy="15" r="3.5" fill="#00B4CC"/><line x1="2" y1="15" x2="28" y2="15" stroke="white" stroke-width="1.5" opacity=".35"/></svg>
+    </div>
+    <h2>NP-110 LINCURVE PRO</h2>
+    <p class="pw-sub">Guided Diagnostic Interface<br>Authorized Service Engineers &amp; Distributors Only</p>
+    <input type="password" class="pw-input" id="pwInput" placeholder="Enter access password" autocomplete="new-password" onkeydown="if(event.key==='Enter')checkPassword()" />
+    <button class="pw-btn" onclick="checkPassword()">Access Diagnostic Tool</button>
+    <div class="pw-err" id="pwError"></div>
+    <div class="pw-footer-text">NEWPONG Co., Ltd. &#xB7; NEW WAVE for Beautiful Life</div>
+  </div>
+</div>
+<header class="header">
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo-icon">
+        <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="15" cy="15" rx="13" ry="8" fill="none" stroke="#1B3A6B" stroke-width="2"/>
+          <ellipse cx="15" cy="15" rx="8" ry="5" fill="none" stroke="#005F6B" stroke-width="2"/>
+          <circle cx="15" cy="15" r="3.5" fill="#00B4CC"/>
+          <line x1="2" y1="15" x2="28" y2="15" stroke="#1B3A6B" stroke-width="1.5" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1>NP-110 LINCURVE PRO</h1>
+        <p>Guided Diagnostic Interface · NEWPONG</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge">Service Engineers Only</span>
+      <select class="lang-select" id="langSelect" onchange="setLanguage(this.value)">
+        <option value="English">🌐 English</option>
+        <option value="Portuguese (Brazilian)">🇧🇷 Português (BR)</option>
+        <option value="Spanish (Latin American)">🇲🇽 Español (LATAM)</option>
+        <option value="Thai">🇹🇭 ภาษาไทย</option>
+        <option value="Chinese Simplified">🇨🇳 中文 (简体)</option>
+        <option value="Japanese">🇯🇵 日本語</option>
+        <option value="Indonesian">🇮🇩 Bahasa Indonesia</option>
+        <option value="Vietnamese">🇻🇳 Tiếng Việt</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+</div>
+
+<main class="main">
+  <div class="disclaimer">
+    <span style="font-size:16px;flex-shrink:0;">⚠️</span>
+    <span><strong>Authorized Use Only.</strong> This tool is for certified NEWPONG service engineers and authorized distributors only. Clinical treatment guidance is strictly out of scope. For clinical questions: <a href="/cdn-cgi/l/email-protection#ef86818980af818a989f808188c18c8082"><span class="__cf_email__" data-cfemail="e28b8c848da28c8795928d8c85cc818d8f">[email&#160;protected]</span></a> · Technical Support: <a href="/cdn-cgi/l/email-protection#1a697f686c73797f5a747f6d6a75747d34797577"><span class="__cf_email__" data-cfemail="e192849397888284a18f8496918e8f86cf828e8c">[email&#160;protected]</span></a></span>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+    <input type="text" class="search-bar" id="searchBar" placeholder="Search service manual — e.g. 'replace NP110-PSU-01', 'E004 thermal shutdown', 'fuse replacement', 'touch calibration'..." onkeydown="if(event.key==='Enter') submitSearch()" />
+    <button class="search-btn" onclick="submitSearch()">Search</button>
+  </div>
+
+  <div class="section-label">Select a Diagnostic Category</div>
+  <div class="category-grid">
+    <div class="cat-tile" onclick="selectCategory('main-unit')"><span class="cat-icon">🖥️</span><div class="cat-name">Main Unit</div></div>
+    <div class="cat-tile" onclick="selectCategory('cartridges')"><span class="cat-icon">🔲</span><div class="cat-name">Cartridges</div></div>
+    <div class="cat-tile" onclick="selectCategory('handpiece')"><span class="cat-icon">🖐️</span><div class="cat-name">Handpiece</div></div>
+    <div class="cat-tile" onclick="selectCategory('error-codes')"><span class="cat-icon">⚠️</span><div class="cat-name">Error &amp; Caution Codes</div></div>
+    <div class="cat-tile" onclick="selectCategory('cables')"><span class="cat-icon">🔌</span><div class="cat-name">Cables &amp; Connectors</div></div>
+    <div class="cat-tile" onclick="selectCategory('post-repair')"><span class="cat-icon">✅</span><div class="cat-name">Post-Repair Checklist</div></div>
+  </div>
+
+  <!-- MAIN UNIT PANEL -->
+  <div class="sub-panel" id="panel-main-unit">
+    <div class="sub-panel-header"><span>🖥️</span><h3>Main Unit — Select Symptom Area</h3><button onclick="closePanel('main-unit')">×</button></div>
+    <div class="sub-panel-body">
+      <div class="sub-grid">
+        <button class="sub-btn" onclick="selectSub('main-unit','Device does not power on')">Device does not power on</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Device powers off unexpectedly')">Powers off unexpectedly</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','LCD screen does not turn on')">LCD screen does not turn on</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Screen flickering, dim, or shows artifacts')">Screen flickering / dim / artifacts</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Touch screen unresponsive or inaccurate')">Touchscreen unresponsive / inaccurate</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','No audio output or audio distorted')">No audio / audio distorted</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','No indicator LED')">No indicator LED</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Date and time resets at each boot — RTC battery')">Date/time resets at boot</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Treatment parameters not saving — flash storage')">Treatment parameters not saving</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Main System disassembly procedure Section 7.3')">Main system disassembly (§7.3)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','LCD Assembly disassembly procedure Section 7.2')">LCD assembly disassembly (§7.2)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Fuse replacement T3.15A 250V NP110-FUSE-01')">Fuse replacement (NP110-FUSE-01)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Power supply PSU NP110-PSU-01 inspection and replacement')">PSU (NP110-PSU-01) replacement</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Main control PCB NP110-PCB-MCU replacement')">MCU PCB (NP110-PCB-MCU)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Ultrasound generator PCB NP110-PCB-USG replacement')">USG PCB (NP110-PCB-USG)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Cooling fan NP110-FAN-01 inspection and replacement')">Cooling fan (NP110-FAN-01)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Software update procedure Section 10')">Software update procedure (§10)</button>
+        <button class="sub-btn" onclick="selectSub('main-unit','Preventive maintenance and periodic inspection schedule Section 3.2')">Preventive maintenance schedule</button>
+      </div>
+      <div class="symptom-input-wrap">
+        <input type="text" class="symptom-input" id="input-main-unit" placeholder="Or describe the main unit issue..." onkeydown="if(event.key==='Enter') askAI('main-unit')" />
+        <button class="btn-sm btn-teal" onclick="askAI('main-unit')">Ask AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARTRIDGES PANEL -->
+  <div class="sub-panel" id="panel-cartridges">
+    <div class="sub-panel-header"><span>🔲</span><h3>Cartridges — Select Issue Type</h3><button onclick="closePanel('cartridges')">×</button></div>
+    <div class="sub-panel-body">
+      <div class="sub-grid">
+        <button class="sub-btn" onclick="selectSub('cartridges','C001 cartridge shot count approaching limit greater than 90 percent used')">C001 — Shot count approaching limit</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','C002 cartridge shot count reached rated limit 10000 shots')">C002 — Shot limit reached (10,000)</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','C003 cartridge EEPROM read error')">C003 — EEPROM read error</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','C004 unrecognized cartridge type detected')">C004 — Cartridge not recognized</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','C005 cartridge temperature above normal range')">C005 — Cartridge overheating</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','C006 cartridge temperature sensor fault')">C006 — Temperature sensor fault</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','C022 cartridge insertion not confirmed after connection')">C022 — Insertion not confirmed</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','E008 cartridge EEPROM write failure shot count not recorded')">E008 — EEPROM write failure</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','DS cartridge CT-110-DS 4.5mm focal depth 4.0MHz specifications')">DS (CT-110-DS) — 4.5 mm</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','MF cartridge CT-110-MF 3.0mm focal depth 4.0MHz specifications')">MF (CT-110-MF) — 3.0 mm</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','SC cartridge CT-110-SC 1.5mm focal depth 7.0MHz specifications')">SC (CT-110-SC) — 1.5 mm</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','BF cartridge CT-110-BF 6.0mm focal depth 3.0MHz specifications')">BF (CT-110-BF) — 6.0 mm</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','DB cartridge CT-110-DB 9.0mm focal depth 3.0MHz specifications')">DB (CT-110-DB) — 9.0 mm</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','EDB cartridge CT-110-EDB 13.0mm focal depth 3.0MHz specifications')">EDB (CT-110-EDB) — 13.0 mm</button>
+        <button class="sub-btn" onclick="selectSub('cartridges','Cartridge cleaning transducer face inspection Section 3.1.2')">Cleaning &amp; transducer inspection</button>
+      </div>
+      <div class="symptom-input-wrap">
+        <input type="text" class="symptom-input" id="input-cartridges" placeholder="Or describe the cartridge issue..." onkeydown="if(event.key==='Enter') askAI('cartridges')" />
+        <button class="btn-sm btn-teal" onclick="askAI('cartridges')">Ask AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HANDPIECE PANEL -->
+  <div class="sub-panel" id="panel-handpiece">
+    <div class="sub-panel-header"><span>🖐️</span><h3>Handpiece — Select Issue Type</h3><button onclick="closePanel('handpiece')">×</button></div>
+    <div class="sub-panel-body">
+      <div class="sub-grid">
+        <button class="sub-btn" onclick="selectSub('handpiece','C007 handpiece cable connection intermittent')">C007 — Cable connection intermittent</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','C008 handpiece position sensor signal weak')">C008 — Position sensor signal weak</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','E007 handpiece communication failure no response')">E007 — Communication failure</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','No ultrasound output no error codes handpiece not recognized or connected')">No output, no error — handpiece</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','C015 ultrasound output calibration deviation greater than 5 percent')">C015 — Output calibration deviation</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','C016 output energy delivery lower than set value coupling gel')">C016 — Energy below set value</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','Shot count not decrementing EEPROM write failure E008')">Shot count not decrementing</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','HP-110 handpiece NP110-HP-01 specifications and Type BF applied part classification')">HP-110 specifications</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','Handpiece cable HC-110 NP110-CBL-HP inspection coiled multi-conductor 2.0m')">HC-110 cable inspection</button>
+        <button class="sub-btn" onclick="selectSub('handpiece','Handpiece connector module NP110-CON-HP inspection and replacement')">Connector (NP110-CON-HP)</button>
+      </div>
+      <div class="symptom-input-wrap">
+        <input type="text" class="symptom-input" id="input-handpiece" placeholder="Or describe the handpiece issue..." onkeydown="if(event.key==='Enter') askAI('handpiece')" />
+        <button class="btn-sm btn-teal" onclick="askAI('handpiece')">Ask AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERROR CODES PANEL -->
+  <div class="sub-panel" id="panel-error-codes">
+    <div class="sub-panel-header"><span>⚠️</span><h3>Error &amp; Caution Codes — Select for Full Resolution Procedure</h3><button onclick="closePanel('error-codes')">×</button></div>
+    <div class="sub-panel-body">
+      <select class="error-code-select" id="errorCodeSelect" onchange="selectErrorCode(this.value)">
+        <option value="">— Select an error or caution code —</option>
+        <optgroup label="⛔ ERROR CODES — Treatment output suspended">
+          <option value="E001">E001 — Hardware: Ultrasound generator PCB fault (NP110-PCB-USG)</option>
+          <option value="E002">E002 — Hardware: PSU over-voltage or under-voltage fault</option>
+          <option value="E003">E003 — Hardware: Main control PCB fault / watchdog reset</option>
+          <option value="E004">E004 — Safety: Thermal shutdown — internal temp exceeded 60°C ⛔ DO NOT OPERATE</option>
+          <option value="E005">E005 — Safety: Leakage current exceeded safe limit ⛔ DO NOT OPERATE</option>
+          <option value="E006">E006 — Safety: Protective earth open circuit ⛔ DO NOT OPERATE</option>
+          <option value="E007">E007 — Handpiece: Communication failure (no response)</option>
+          <option value="E008">E008 — Cartridge: EEPROM write failure (shot count not recorded)</option>
+        </optgroup>
+        <optgroup label="⚠️ CAUTION CODES — Device continues, address promptly">
+          <option value="C001">C001 — Cartridge: Shot count approaching limit (>90% used)</option>
+          <option value="C002">C002 — Cartridge: Shot count reached rated limit (10,000 shots)</option>
+          <option value="C003">C003 — Cartridge: EEPROM read error</option>
+          <option value="C004">C004 — Cartridge: Unrecognized cartridge type</option>
+          <option value="C005">C005 — Cartridge: Temperature above normal range</option>
+          <option value="C006">C006 — Cartridge: Temperature sensor fault</option>
+          <option value="C007">C007 — Handpiece: Cable connection intermittent</option>
+          <option value="C008">C008 — Handpiece: Position sensor signal weak</option>
+          <option value="C009">C009 — System: Internal temperature elevated (>45°C)</option>
+          <option value="C010">C010 — System: Cooling fan speed below threshold</option>
+          <option value="C011">C011 — System: PSU output voltage at lower tolerance</option>
+          <option value="C012">C012 — System: RTC battery low</option>
+          <option value="C013">C013 — Software: Version mismatch (UI vs firmware)</option>
+          <option value="C014">C014 — Software: Non-critical log write failure</option>
+          <option value="C015">C015 — Output: Ultrasound calibration deviation >5%</option>
+          <option value="C016">C016 — Output: Energy delivery lower than set value</option>
+          <option value="C017">C017 — Display: Touch calibration drift detected</option>
+          <option value="C018">C018 — Display: Display brightness below minimum</option>
+          <option value="C019">C019 — Network: Service communication timeout</option>
+          <option value="C020">C020 — Safety: Patient leakage current approaching upper limit ⚠️</option>
+          <option value="C021">C021 — Safety: Protective earth impedance approaching upper limit ⚠️</option>
+          <option value="C022">C022 — Cartridge: Insertion not confirmed after connection</option>
+          <option value="C023">C023 — System: Service interval due (12 months)</option>
+          <option value="C024">C024 — System: Abnormal shutdown at last power cycle</option>
+        </optgroup>
+      </select>
+      <div class="symptom-input-wrap">
+        <input type="text" class="symptom-input" id="input-error-codes" placeholder="Or type a code (e.g. E004, C009) or describe the fault..." onkeydown="if(event.key==='Enter') askAI('error-codes')" />
+        <button class="btn-sm btn-teal" onclick="askAI('error-codes')">Get Resolution Procedure</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CABLES PANEL -->
+  <div class="sub-panel" id="panel-cables">
+    <div class="sub-panel-header"><span>🔌</span><h3>Cables &amp; Connectors — Select Issue</h3><button onclick="closePanel('cables')">×</button></div>
+    <div class="sub-panel-body">
+      <div class="sub-grid">
+        <button class="sub-btn" onclick="selectSub('cables','Power cord inspection and IEC inlet C14 NP110-IEC-01')">Power cord &amp; IEC inlet (NP110-IEC-01)</button>
+        <button class="sub-btn" onclick="selectSub('cables','Fuse replacement T3.15A 250V IEC 60127-2 5x20mm NP110-FUSE-01 in IEC inlet fuse holder')">Fuse (NP110-FUSE-01) T3.15A/250V</button>
+        <button class="sub-btn" onclick="selectSub('cables','Handpiece cable HC-110 NP110-CBL-HP coiled 2.0m multi-conductor shielded inspection')">Handpiece cable (NP110-CBL-HP)</button>
+        <button class="sub-btn" onclick="selectSub('cables','Handpiece connector module NP110-CON-HP proprietary multi-pin locking inspection and replacement')">Handpiece connector (NP110-CON-HP)</button>
+        <button class="sub-btn" onclick="selectSub('cables','LVDS cable NP110-CBL-LVDS 30-pin 400mm LCD to main unit connection and inspection')">LVDS cable (NP110-CBL-LVDS)</button>
+        <button class="sub-btn" onclick="selectSub('cables','Touch FPC cable NP110-CBL-TFPC 6-pin ZIF latch inspection and reseating')">Touch FPC cable (NP110-CBL-TFPC)</button>
+        <button class="sub-btn" onclick="selectSub('cables','Internal cable harness NP110-CBL-INT multi-conductor loom inspection and routing')">Internal harness (NP110-CBL-INT)</button>
+        <button class="sub-btn" onclick="selectSub('cables','Protective earth PE continuity measurement limit 0.2 ohm IEC 60601-1 Section 8.6')">PE continuity measurement (≤0.2 Ω)</button>
+        <button class="sub-btn" onclick="selectSub('cables','E006 protective earth open circuit detected — inspection power cord IEC inlet internal PE wiring')">E006 — PE open circuit repair</button>
+        <button class="sub-btn" onclick="selectSub('cables','USB service port inspection debris bent pins FAT32 format update procedure')">USB service port inspection</button>
+      </div>
+      <div class="symptom-input-wrap">
+        <input type="text" class="symptom-input" id="input-cables" placeholder="Or describe the cable or connector issue..." onkeydown="if(event.key==='Enter') askAI('cables')" />
+        <button class="btn-sm btn-teal" onclick="askAI('cables')">Ask AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST-REPAIR PANEL -->
+  <div class="sub-panel" id="panel-post-repair">
+    <div class="sub-panel-header"><span>✅</span><h3>Post-Repair Inspection — Select Check Area (Section 12)</h3><button onclick="closePanel('post-repair')">×</button></div>
+    <div class="sub-panel-body">
+      <div class="sub-grid">
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.1 Appearance Inspection acceptance criteria enclosure labels connectors power cord rubber feet')">12.1 Appearance Inspection</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.2 Power and Operation Check boot sequence LED indicator software version date time')">12.2 Power &amp; Operation Check</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.3 Handpiece and Cartridge Check recognition DS MF SC BF shot count display')">12.3 Handpiece &amp; Cartridge Check</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.4 Display and Audio Check LCD quality backlight touch calibration audio sounds')">12.4 Display &amp; Audio Check</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.5 Ultrasound Output Verification measured energy within plus or minus 10 percent of set value DS MF SC')">12.5 Ultrasound Output Verification</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.6 Safety Function Verification PE continuity leakage current thermal shutdown output disable on error')">12.6 Safety Function Verification</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Full post-repair inspection checklist all sections 12.1 through 12.6 complete procedure')">Full Checklist (Sections 12.1–12.6)</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Protective earth PE impedance limit 0.2 ohm measured between PE terminal and accessible metal parts IEC 60601-1 Section 8.6')">PE impedance limit (≤0.2 Ω)</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Enclosure leakage current normal condition limit 100 microamps single fault SFC limit 500 microamps IEC 60601-1 Section 8.7')">Enclosure leakage current limits</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Patient leakage current applied part BF type limit 100 microamps AC normal condition IEC 60601-1')">Patient leakage BF (≤100 µA)</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Periodic inspection schedule before each use daily monthly every 6 months annually Section 3.2')">Periodic inspection schedule</button>
+        <button class="sub-btn" onclick="selectSub('post-repair','Section 12.7 Inspection Check Sheet form fields device serial number service date technician signature overall result')">12.7 Inspection Check Sheet</button>
+      </div>
+      <div class="symptom-input-wrap">
+        <input type="text" class="symptom-input" id="input-post-repair" placeholder="Or ask about a specific post-repair step..." onkeydown="if(event.key==='Enter') askAI('post-repair')" />
+        <button class="btn-sm btn-teal" onclick="askAI('post-repair')">Ask AI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="spinner"></div>
+    <div class="loading-text">Consulting NPSVM-110-EN Rev. 04 service manual...</div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="response-area" id="responseArea">
+    <div class="response-header">
+      <span>📋</span>
+      <h4 id="responseTitle">Diagnostic Response</h4>
+      <span class="resp-badge">NPSVM-110-EN Rev. 04</span>
+    </div>
+    <div class="response-body">
+      <div class="response-text" id="responseText"></div>
+      <div class="citation" id="responseCitation"></div>
+    </div>
+    <div class="response-footer">
+      <span class="feedback-label">Was this helpful?</span>
+      <button class="feedback-btn" id="thumbUp" onclick="feedback('up')" title="Helpful">👍</button>
+      <button class="feedback-btn" id="thumbDown" onclick="feedback('down')" title="Not helpful">👎</button>
+      <a href="/cdn-cgi/l/email-protection#46352334302f252306282331362928216825292b793533242c2325327b08166b7777766374761223252e282f25272a63747615333636293432637476033525272a27322f2928" class="support-btn hidden" id="supportBtn">📧 Contact Technical Support</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <strong>NEWPONG Co., Ltd.</strong> — NP-110 LINCURVE PRO Guided Diagnostic Interface<br>
+  <em>NEW WAVE for Beautiful Life</em> &nbsp;·&nbsp; Technical Support: <a href="/cdn-cgi/l/email-protection#e4978196928d8781a48a8193948b8a83ca878b89"><span class="__cf_email__" data-cfemail="cbb8aeb9bda2a8ae8ba5aebcbba4a5ace5a8a4a6">[email&#160;protected]</span></a> &nbsp;·&nbsp; General: <a href="/cdn-cgi/l/email-protection#d8b1b6beb798b6bdafa8b7b6bff6bbb7b5"><span class="__cf_email__" data-cfemail="5f363139301f313a282f303138713c3032">[email&#160;protected]</span></a> &nbsp;·&nbsp; <a href="https://www.newpong.com" target="_blank">www.newpong.com</a><br>
+  <span style="font-size:11px;opacity:0.6;margin-top:4px;display:block;">For certified service engineers and authorized distributors only · Knowledge Base: NPSVM-110-EN Rev. 04 · December 2025 · © 2025 Newpong Co., Ltd.</span>
+</footer>
+
+<script>
+let apiKey = "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";
+let selectedLanguage = 'English';
+let selectedCategory = null;
+let selectedSubcategory = null;
+
+// ============================================================
+// FULL KNOWLEDGE BASE — NPSVM-110-EN Rev. 04
+// ============================================================
+const KB = `DOCUMENT: NP-110 LINCURVE PRO SERVICE MANUAL | NPSVM-110-EN Rev. 04 | December 2025
+Manufacturer: Newpong Co., Ltd., Seoul, Republic of Korea
+FOR USE BY AUTHORIZED SERVICE PERSONNEL ONLY
+
+=== SECTION 1 — SAFETY PRECAUTIONS ===
+1.1 GENERAL: WARNING — This equipment is for qualified medical professionals and trained service technicians only. Improper use may cause serious injury or death. Read all instructions before servicing. Use only Newpong-approved replacement parts. Power off and unplug before internal service. Do not service while connected to a patient. Maintain service records.
+1.2 ELECTRICAL SAFETY: DANGER — Electric shock hazard. Disconnect power cord from mains before opening enclosure. Capacitors may retain dangerous voltage for up to 5 minutes after disconnection. Wait at least 5 minutes before servicing internal components. Verify mains voltage matches 100–240 VAC 50/60 Hz. Use only supplied or approved power cord. Ensure proper earth ground — do not bypass. Inspect power cord before each use. Protective earth impedance shall not exceed 0.2 Ω (IEC 60601-1).
+1.3 MECHANICAL SAFETY: CAUTION — Device contains precision components. Use ESD wrist strap and mat when handling PCBs. Tighten all fasteners to specified torque. Ensure all connectors fully seated before power-on. Replace all covers before returning to service.
+1.4 INSTALLATION ENVIRONMENT: Operating: +10°C to +40°C, 30–75% RH non-condensing, 700–1060 hPa, 0–2000 m altitude, IP21, Pollution Degree 2, Installation Category II. Storage: -20°C to +60°C, 10–90% RH, 500–1060 hPa, 0–4572 m. Indoor use only. Minimum 10 cm clearance all sides for ventilation.
+
+=== SECTION 2 — IEC ELECTRICAL SAFETY AND EMC STANDARDS ===
+2.1: Applied Standard IEC 60601-1:2005+A1:2012. Class I Equipment. Type BF applied part (Body Floating). IP21. Continuous Operation. EMC: IEC 60601-1-2:2014 Ed. 4. Professional Healthcare Facility environment.
+2.2 EMISSIONS: RF Conducted CISPR 11 0.15–30 MHz Group 1 Class B. RF Radiated CISPR 11 30 MHz–1 GHz Group 1 Class B. Harmonic IEC 61000-3-2 Class A. Voltage Fluctuations IEC 61000-3-3 Compliant.
+2.3 IMMUNITY: ESD IEC 61000-4-2 ±8 kV contact / ±15 kV air Criterion A. Radiated RF IEC 61000-4-3 3 V/m 80–2700 MHz Criterion A. EFT/Burst IEC 61000-4-4 ±2 kV power / ±1 kV signal Criterion A. Surge IEC 61000-4-5 ±1 kV L-N / ±2 kV L/N-PE Criterion A. Conducted RF IEC 61000-4-6 3 Vrms 0.15–80 MHz Criterion A. Magnetic Field IEC 61000-4-8 30 A/m Criterion A. Voltage Dips per IEC 61000-4-11 various Criteria B and C.
+2.4 RF SEPARATION DISTANCES: d = 1.2√P (150 kHz–800 MHz); d = 2.3√P (800 MHz–2.5 GHz). Where P = max rated output power in watts.
+
+=== SECTION 3 — CLEANING AND PERIODIC INSPECTION ===
+3.1.1 DEVICE EXTERIOR: WARNING — Disconnect power before cleaning. Do not immerse or allow liquid ingress. Do not use abrasive cleaners, solvents, or bleach. Wipe exterior with soft cloth dampened with 70% isopropyl alcohol (IPA) or hospital-grade disinfectant wipe. Pay attention to touch screen, ventilation grilles, handpiece connector ports. Air-dry completely before reconnecting power. Do not spray cleaning agents directly onto device.
+3.1.2 HANDPIECE AND CARTRIDGES: Clean handpiece body (HP-110) with 70% IPA wipe after each patient use. Wipe cartridge transducer surface with soft DRY cloth only — do not use liquids on transducer face. Inspect cartridge for cracks, chips, or damage before each use. Do not autoclave or soak cartridges.
+3.1.3 POWER CORD AND CONNECTORS: Wipe with dry cloth. Inspect for fraying, cuts, or connector damage. Replace immediately if damaged.
+3.2 PERIODIC INSPECTION SCHEDULE:
+- Before each use: Device exterior visual inspection (no cracks/damage); Power cord and connector condition.
+- Daily: Touch screen operation all zones; Handpiece recognition all cartridge types.
+- Monthly: Ultrasound output level verification (±10% of rated value); Cartridge transducer face inspection.
+- Every 6 months: Protective earth impedance (≤0.2 Ω per IEC 60601-1); Enclosure leakage current (≤100 μA normal, ≤500 μA SFC); Patient applied part leakage current (≤100 μA AC, BF type); Software version check.
+- Annually: Full safety and performance verification — complete post-repair inspection per Section 12.
+NOTE: Record all inspection results in device service log. Out-of-specification results must be addressed before returning to clinical use.
+
+=== SECTION 4 — PRODUCT INFORMATION ===
+4.1 OVERVIEW: LINCURVE PRO (NP-110) is a HIFU (High Intensity Focused Ultrasound) system for non-invasive aesthetic procedures. Delivers focused ultrasound energy to targeted tissue depths for coagulation necrosis at focal point, producing tissue lifting and tightening without damage to surrounding tissue or skin surface. Supports multiple interchangeable cartridges for SMAS layer, dermis, and subcutaneous fat layers.
+4.2 COMPONENTS: NP-110 Main Unit (10.1" touch screen, PSU, control electronics; qty 1). Handpiece (HP-110, ergonomic, cartridge locking mechanism, position sensor; qty 1). Handpiece Cable (coiled; qty 1). Cartridge DS 4.5 mm (deep SMAS; qty 1). Cartridge MF 3.0 mm (mid-face SMAS/fat; qty 1). Cartridge SC 1.5 mm (superficial dermis; qty 1). Cartridge BF 6.0 mm (body fat; qty 1 option). Cartridge DB 9.0 mm (deep body; qty 1 option). Cartridge EDB 13.0 mm (extended deep body; qty 1 option). Power Cord (IEC 60320 C13/C14, 1.8 m; qty 1). Coupling Gel (water-based, 250 mL; qty 1). Service Manual NPSVM-110-EN Rev. 04 (qty 1). User Manual NPUM-110-EN (qty 1 separate).
+4.3 SPECIFICATIONS: Ultrasound Frequency: 3.0 MHz / 4.0 MHz / 7.0 MHz (cartridge-dependent). Focal Depths: 1.5 mm, 3.0 mm, 4.5 mm, 6.0 mm, 9.0 mm, 13.0 mm. Output Energy Range: 0.1 J to 1.5 J per pulse (cartridge-dependent). Pulse Repetition Frequency: 1–5 Hz adjustable. Shot Count per Cartridge: 10,000 shots rated life. Display: 10.1 inch IPS touch screen, 1280×800 resolution. Power Input: 100–240 VAC, 50/60 Hz, 3.0 A max. Power Consumption: Max 300 W. Dimensions (W×D×H): 340 mm × 390 mm × 380 mm. Weight: Approx. 14 kg. Operating Temp: +10°C to +40°C. Storage Temp: -20°C to +60°C. Humidity: 30–75% RH operating, 10–90% RH storage. Applied Part Type: Type BF (IEC 60601-1). Protection Class: Class I. IP Rating: IP21.
+
+=== SECTION 5 — COMPONENT NAMES AND FUNCTIONS ===
+5.1 MAIN BODY:
+1. Touch Screen Display — 10.1" IPS panel, main operator interface.
+2. Power Indicator LED — Green (standby), Blue (operating), Red (fault).
+3. Handpiece Port — Proprietary connector for handpiece cable, locking type.
+4. USB Service Port — USB-A for software update and service data download (cover panel-protected).
+5. Power Switch (Main) — Rear rocker switch; disconnects mains power.
+6. IEC Power Inlet — IEC 60320 C14 with integrated fuse holder (2× T3.15A/250V fuses).
+7. Ventilation Grille (Rear) — Fan-forced air exhaust. Do not block. Minimum 10 cm clearance.
+8. Ventilation Grille (Bottom) — Passive air intake.
+9. Protective Earth Terminal — M4 external PE bonding terminal (label: ⏚).
+10. Device Serial Number Label — Rear panel; model, S/N, manufacture date, voltage/power rating.
+5.2 ACCESSORIES:
+1. Handpiece HP-110 (NP110-HP-01) — Ergonomic treatment handpiece, cartridge locking mechanism, position sensor. Type BF applied part.
+2. Handpiece Cable HC-110 (NP110-CBL-HP) — Coiled, 2.0 m extended. Multi-conductor shielded. Proprietary connector both ends.
+3. Power Cord — IEC 60320 C13, country-specific mains plug. 250 VAC, 10 A minimum.
+4. Coupling Gel — Water-based acoustic gel. Non-sterile. Single-use tube recommended.
+5.3 CARTRIDGES: CAUTION — Each cartridge rated 10,000 shots. Device tracks shot count via embedded EEPROM. Replace at or before rated shot limit. Do not attempt to reset cartridge counters.
+DS Cartridge (CT-110-DS): 4.0 MHz, 4.5 mm focal depth. Deep SMAS layer; facial lifting and contouring.
+MF Cartridge (CT-110-MF): 4.0 MHz, 3.0 mm focal depth. Mid SMAS/fat interface; mid-face tightening.
+SC Cartridge (CT-110-SC): 7.0 MHz, 1.5 mm focal depth. Superficial dermis; skin texture and tone improvement.
+BF Cartridge (CT-110-BF): 3.0 MHz, 6.0 mm focal depth. Subcutaneous fat layer; body treatment (optional).
+DB Cartridge (CT-110-DB): 3.0 MHz, 9.0 mm focal depth. Deep body fat; body contouring (optional).
+EDB Cartridge (CT-110-EDB): 3.0 MHz, 13.0 mm focal depth. Extended deep body; abdominal treatment (optional).
+
+=== SECTION 6 — EXPLODED VIEW / PARTS REFERENCE ===
+LCD ASSEMBLY PARTS:
+NP110-LCD-BZ-01: Front Bezel (LCD Frame) — ABS gloss black
+NP110-LCD-TP-01: Touch Screen Panel 10.1" — Capacitive IPS
+NP110-LCD-DM-01: LCD Display Module — 1280×800
+NP110-LCD-BK-U: LCD Bracket Upper — Steel powder-coated
+NP110-LCD-BK-L: LCD Bracket Lower — Steel powder-coated
+NP110-PCB-LCD: LCD Control PCB — Includes backlight driver
+NP110-CBL-LVDS: LVDS Cable (LCD to Main) — 30-pin 400 mm
+NP110-CBL-TFPC: Touch FPC Cable — 6-pin USB-type signal
+NP110-PCB-LED: LED Indicator Board — RGB LED 3-color
+NP110-SPK-L: Speaker Left — 2 W 8 Ω
+NP110-SPK-R: Speaker Right — 2 W 8 Ω
+NP110-GRL-SL: Speaker Grill Left — Steel mesh
+NP110-GRL-SR: Speaker Grill Right — Steel mesh
+NP110-LCD-CV-R: Rear LCD Cover — ABS textured black
+NP110-HNG-L: Hinge Assembly Left — Torque 0.8–1.2 N·m
+NP110-HNG-R: Hinge Assembly Right — Torque 0.8–1.2 N·m
+MAIN SYSTEM PARTS:
+NP110-CVR-TOP: Top Cover Assembly — ABS+PC alloy textured
+NP110-BASE-01: Bottom Base Plate — Steel 2.0 mm powder-coated
+NP110-PCB-MCU: Main Control PCB (MCU) — ARM Cortex-A main CPU board
+NP110-PCB-USG: Ultrasound Generator PCB — High-voltage RF drive board
+NP110-PSU-01: Power Supply Unit — 300 W 100–240 VAC input
+NP110-FAN-01: Cooling Fan Assembly — DC 12 V ball bearing 92 mm
+NP110-CON-HP: Handpiece Connector Module — Proprietary multi-pin locking
+NP110-IEC-01: IEC Power Inlet Module — C14 with 2× fuse holder
+NP110-PNL-R: Rear Panel Plate — Steel anodized label-printed
+NP110-CBL-INT: Internal Cable Harness — Multi-conductor 300 mm loom
+NP110-FEET-01: Bottom Rubber Feet set of 4 — Non-slip silicone adhesive
+
+=== SECTION 7 — DISASSEMBLY PROCEDURE ===
+7.1 SAFETY PRECAUTIONS: DANGER — Disconnect mains power and remove power cord before any disassembly. High-voltage capacitors may retain charge up to 5 minutes after disconnection. Wait at least 5 minutes before opening enclosure. WARNING — No user-serviceable parts. Authorized service technicians only. Use ESD wrist strap and mat throughout. Photograph internal assembly before disconnecting cables. Label and bag all screws.
+7.2 LCD ASSEMBLY DISASSEMBLY — Required tools: Phillips PH1 screwdriver, plastic spudger, anti-static tweezers, ESD wrist strap.
+Step 1: Power off and unplug. Switch off rear rocker switch. Disconnect power cord from IEC inlet. Wait 5 minutes.
+Step 2: Remove rear LCD cover. Remove 4× M3×8 screws. Lift cover from hinge assembly.
+Step 3: Disconnect LVDS cable (NP110-CBL-LVDS). Unlock LVDS cable latch on NP110-PCB-LCD. Slide cable out horizontally.
+Step 4: Disconnect touch FPC cable (NP110-CBL-TFPC). Lift ZIF latch on touch FPC connector. Remove cable.
+Step 5: Disconnect LED indicator connector. Unplug JST 4-pin from NP110-PCB-LED.
+Step 6: Disconnect speaker connectors. Unplug JST 2-pin from NP110-SPK-L and NP110-SPK-R.
+Step 7: Remove LCD bracket upper (NP110-LCD-BK-U). Remove 4× M3×6 screws. Support LCD panel from front.
+Step 8: Remove LCD bracket lower (NP110-LCD-BK-L). Remove 4× M3×6 screws. Keep LCD panel supported.
+Step 9: Remove touch screen panel (NP110-LCD-TP-01). Separate from front bezel using plastic spudger. Do not flex panel.
+Step 10: Remove LCD display module (NP110-LCD-DM-01). Lift from bracket. Handle edges only; do not touch display surface.
+Step 11: Remove LCD Control PCB (NP110-PCB-LCD). Remove 4× M2.5×5 screws. Lift board clear.
+Step 12: Remove front bezel (NP110-LCD-BZ-01). Remove 6× M3×8 screws. Lift bezel.
+Step 13: Detach hinge assemblies if required (NP110-HNG-L / NP110-HNG-R). Remove 3× M4×10 screws per hinge. Reassembly torque: 0.8–1.2 N·m.
+Step 14: Remove speaker grills (NP110-GRL-SL / NP110-GRL-SR) with plastic spudger. Adhesive-retained.
+7.3 MAIN SYSTEM DISASSEMBLY — Required tools: Phillips PH2 screwdriver, Torx T10 driver, needle-nose pliers, ESD wrist strap, multimeter.
+Step 1: Power off, unplug, wait 5 min. Verify no voltage at PSU output with multimeter before touching internal components.
+Step 2: Disconnect LCD assembly cables (LVDS, FPC, LED, speaker) at main unit connectors before tilting LCD.
+Step 3: Remove top cover (NP110-CVR-TOP). Remove 8× M3×8 Phillips screws. Lift upward. Release tab clips at front edge before lifting.
+Step 4: Remove rear panel plate (NP110-PNL-R). Remove 6× M3×8 screws. Disconnect NP110-CON-HP cables before full removal.
+Step 5: Disconnect internal cable harness (NP110-CBL-INT). Photograph routing. Disconnect all connectors from main PCB and PSU. Label if not color-coded.
+Step 6: Remove cooling fan assembly (NP110-FAN-01). Remove 4× M3×6 screws from fan bracket. Disconnect DC fan power connector from main PCB.
+Step 7: Remove ultrasound generator PCB (NP110-PCB-USG). Remove 6× M3×6 screws from standoffs. Disconnect HV coax connector to handpiece port module. Discharge HV capacitors before removal.
+Step 8: Remove main control PCB (NP110-PCB-MCU). Remove 6× M3×6 screws from standoffs. Disconnect all ribbon and wire connectors.
+Step 9: Remove PSU (NP110-PSU-01). Remove 4× M4×10 screws. Slide PSU rearward to clear mounting tabs.
+Step 10: Remove handpiece connector module (NP110-CON-HP). Remove 4× M3×6 screws. Disconnect RF coax and signal cable from USG PCB side.
+Step 11: Remove IEC power inlet module (NP110-IEC-01). Remove 2× M3×6 screws. Disconnect mains wiring L, N, PE per IEC 60446 wire colors.
+Step 12: Remove bottom base plate (NP110-BASE-01) if required. Remove 4× rubber feet. Remove 8× M4×10 screws.
+REASSEMBLY CAUTION: Torque all fasteners to specification. Reconnect all internal cables before powering on. Verify PE continuity before returning to service (Section 12).
+
+=== SECTION 8 — SERVICE PARTS LIST ===
+Contact service [at] newpong.com with device serial number, part number, and quantity for all orders.
+NP110-LCD-BZ-01: Front Bezel LCD Frame; NP110-LCD-TP-01: Touch Screen Panel 10.1" Capacitive IPS; NP110-LCD-DM-01: LCD Display Module 10.1" 1280×800; NP110-LCD-BK-U: LCD Bracket Upper Steel; NP110-LCD-BK-L: LCD Bracket Lower Steel; NP110-PCB-LCD: LCD Control PCB with backlight driver; NP110-CBL-LVDS: LVDS Cable 30-pin 400mm; NP110-CBL-TFPC: Touch FPC Cable 6-pin; NP110-PCB-LED: LED Indicator Board RGB 3-color; NP110-SPK-L: Speaker Left 2W 8Ω; NP110-SPK-R: Speaker Right 2W 8Ω; NP110-GRL-SL: Speaker Grill Left steel mesh; NP110-GRL-SR: Speaker Grill Right steel mesh; NP110-LCD-CV-R: Rear LCD Cover ABS textured; NP110-HNG-L: Hinge Assembly Left torque 0.8–1.2 N·m; NP110-HNG-R: Hinge Assembly Right torque 0.8–1.2 N·m; NP110-CVR-TOP: Top Cover ABS+PC alloy; NP110-BASE-01: Bottom Base Plate steel powder-coated; NP110-PCB-MCU: Main Control PCB ARM Cortex-A; NP110-PCB-USG: Ultrasound Generator PCB HV RF drive; NP110-PSU-01: PSU 300W 100–240VAC; NP110-FAN-01: Cooling Fan DC 12V 92mm; NP110-CON-HP: Handpiece Connector Module proprietary locking; NP110-IEC-01: IEC Power Inlet Module C14 with fuse holder; NP110-PNL-R: Rear Panel Plate steel anodized; NP110-CBL-INT: Internal Cable Harness multi-conductor; NP110-FEET-01: Rubber Feet Set 4× non-slip silicone; NP110-HP-01: Handpiece HP-110 Type BF; NP110-CBL-HP: Handpiece Cable 2.0m coiled; NP110-FUSE-01: Fuse T3.15A/250V ×2 IEC 60127-2 5×20mm. Cartridge part numbers in Section 5.3.
+
+=== SECTION 9 — CAUTION AND ERROR CODES ===
+9.1 CAUTION CODES (device continues to operate — address promptly):
+C001 | Cartridge | Shot count approaching limit (>90% used) | Prepare replacement cartridge. Current cartridge may continue until limit reached.
+C002 | Cartridge | Shot count reached rated limit (10,000 shots) | Replace cartridge immediately. Operation blocked until replaced.
+C003 | Cartridge | EEPROM read error | Remove and reinsert cartridge. If persists, replace cartridge.
+C004 | Cartridge | Unrecognized cartridge type | Use only Newpong-approved cartridges. Contact service if genuine cartridge not recognized.
+C005 | Cartridge | Temperature above normal range | Allow cartridge to cool 5–10 minutes. Reduce treatment intensity if recurrent.
+C006 | Cartridge | Temperature sensor fault | Replace cartridge. If fault occurs with multiple cartridges, service handpiece.
+C007 | Handpiece | Cable connection intermittent | Check cable connector seating. Inspect cable for damage.
+C008 | Handpiece | Position sensor signal weak | Clean handpiece contacts. If persists, service handpiece.
+C009 | System | Internal temperature elevated (>45°C) | Ensure ventilation grilles unobstructed. Allow 10 min cool-down. Check fan operation.
+C010 | System | Cooling fan speed below threshold | Check NP110-FAN-01 for obstruction. If fan does not recover, service required.
+C011 | System | PSU output voltage at lower tolerance | Monitor operation. If C011 persists, schedule NP110-PSU-01 inspection.
+C012 | System | RTC battery low | Replace CR2032 RTC battery on NP110-PCB-MCU during next service.
+C013 | Software | Version mismatch (UI vs firmware) | Perform software update per Section 10.
+C014 | Software | Non-critical log write failure | Internal storage near capacity. Perform service data download and clear logs via service menu.
+C015 | Output | Ultrasound output calibration deviation >5% | Perform output calibration. If unable to calibrate within spec, service required.
+C016 | Output | Output energy delivery lower than set value | Check coupling gel application. Verify handpiece-to-skin contact.
+C017 | Display | Touch calibration drift detected | Perform touch calibration: Settings > Calibration menu.
+C018 | Display | Display brightness below minimum (backlight aging) | Schedule LCD backlight replacement (NP110-PCB-LCD) at next service.
+C019 | Network | Service communication timeout (if network option fitted) | Check network connection. Non-critical; device continues normal operation.
+C020 | Safety | Patient leakage current approaching upper limit | Power off. Perform leakage current measurement. Do not operate until within specification.
+C021 | Safety | Protective earth impedance approaching upper limit | Verify power cord and earth connection integrity. Perform PE resistance measurement.
+C022 | Cartridge | Insertion not confirmed after connection | Remove and firmly reinsert cartridge until click is felt. Check cartridge lock mechanism.
+C023 | System | Service interval due (12 months) | Schedule preventive maintenance service.
+C024 | System | Abnormal shutdown at last power cycle | Review event log. Inspect for signs of power interruption or fault.
+
+9.2 ERROR CODES (treatment output suspended):
+WARNING: If error codes E004, E005, or E006 are displayed, the device MUST NOT be operated until the fault has been corrected and verified safe by authorized service technician. Remove from clinical use immediately.
+E001 | Hardware | Ultrasound generator PCB fault (NP110-PCB-USG) | Power off. Wait 30 sec. Power on. If error persists, replace NP110-PCB-USG.
+E002 | Hardware | PSU output over-voltage or under-voltage fault | Power off immediately. Measure PSU output voltages. Replace NP110-PSU-01 if out of specification.
+E003 | Hardware | Main control PCB internal fault (watchdog reset) | Power cycle device. If recurrent, download service log and contact Newpong support at service [at] newpong.com.
+E004 | Safety | Thermal shutdown — internal temperature exceeded 60°C | Power off immediately. Allow full cool-down minimum 30 min. Inspect NP110-FAN-01 and ventilation. Do not restart until root cause identified. DEVICE MUST NOT BE OPERATED.
+E005 | Safety | Leakage current exceeded safe limit | Power off immediately. Do not operate. Perform leakage current measurement. Device requires service before return to use. DEVICE MUST NOT BE OPERATED.
+E006 | Safety | Protective earth open circuit detected | Power off immediately. Inspect power cord, NP110-IEC-01, and internal PE wiring. Do not operate without confirmed earth continuity. DEVICE MUST NOT BE OPERATED.
+E007 | Handpiece | Communication failure (no response) | Check cable connection. Test with replacement handpiece (NP110-HP-01). If fault follows handpiece, replace handpiece. If fault follows main unit, service NP110-PCB-USG.
+E008 | Cartridge | EEPROM write failure (shot count not recorded) | Replace cartridge. Fault may indicate counterfeit or damaged cartridge.
+
+=== SECTION 10 — SOFTWARE UPDATE PROCEDURE ===
+10.1 CHECKING SOFTWARE VERSION: Power on and wait for home screen. Tap Settings icon (gear symbol) upper right. Navigate to Settings > System Information > Software Version. Note UI version and Firmware version. Compare to latest versions in update release notes. Update required if displayed version is lower than minimum required, or if troubleshooting requires specific firmware version.
+10.2 UPDATE PROCEDURE: CAUTION — Only use update packages from Newpong or authorized distributor. Do not interrupt power during update. Interrupted updates may require factory recovery.
+Required Materials: USB flash drive (FAT32, minimum 2 GB, maximum 32 GB, no other files present); Newpong software update package (.npkg file); Service access code (provided with update package).
+Update Steps:
+1. Download .npkg file from Newpong support portal.
+2. Copy .npkg file to ROOT directory of USB drive. No folders. File must be at root level.
+3. Power off LINCURVE PRO completely (main power switch off).
+4. Insert USB flash drive into USB Service Port on front panel (behind service port cover).
+5. Power on device. System detects update package during boot and displays Software Update screen automatically.
+6. Verify update package filename and version number match intended update.
+7. Enter service access code when prompted. Tap Confirm.
+8. Tap Start Update. Progress bar displays. Do NOT power off or remove USB drive during this process.
+9. Device restarts automatically when update complete.
+10. After restart, navigate to Settings > System Information to verify new version displayed correctly.
+11. Remove USB flash drive. Replace service port cover.
+12. Perform functional verification (power, touch screen, handpiece recognition) before returning to clinical use.
+Update Troubleshooting:
+- Normal update: 5–10 minutes, wait for automatic restart.
+- Stalled >15 min: DO NOT power off; contact Newpong support before any action.
+- Error screen displayed: Note error code, power off, remove USB, power on, contact support with error code.
+- USB drive not detected (format incorrect): Reformat as FAT32 (not exFAT or NTFS). Ensure .npkg at root level.
+- USB drive not detected (port fault): Test with different USB drive. Inspect USB port for debris or bent pins.
+- Service data download fails: Check USB drive write-protect switch. Use different drive.
+NOTE: Document new software version, date, and technician name in device service record after each update.
+
+=== SECTION 11 — TROUBLESHOOTING ===
+11.1 POWER ISSUES:
+- Device does not power on / power cord not connected → Verify power cord fully seated in IEC inlet and mains outlet.
+- Device does not power on / blown mains fuse(s) → Inspect and replace T3.15A/250V fuses (NP110-FUSE-01) in IEC inlet fuse holder. Use only same-rated fuses.
+- Device does not power on / main power switch off → Verify rear rocker switch is in ON position.
+- Device does not power on / PSU fault → Measure PSU output voltages. Replace NP110-PSU-01 if out of specification.
+- Device powers off unexpectedly / thermal protection activated → Check ventilation; allow cool-down. Review error log for E004.
+- Device powers off unexpectedly / PSU over-current protection → Inspect for shorts on PCBs. Test with known-good PSU.
+- No indicator LED / LED board disconnected or failed → Check JST connector on NP110-PCB-LED. Replace if non-functional.
+11.2 LCD POWER ISSUES:
+- LCD screen does not turn on / LVDS cable disconnected → Reseat NP110-CBL-LVDS on both LCD Control PCB and main unit.
+- LCD screen does not turn on / LCD Control PCB fault → Replace NP110-PCB-LCD.
+- LCD screen does not turn on / LCD display module failed → Replace NP110-LCD-DM-01.
+- Screen flickering or dim / backlight driver fault or aging → Replace NP110-PCB-LCD (backlight driver integrated).
+- Screen shows artifacts or distortion / LVDS cable damaged or loose → Inspect NP110-CBL-LVDS. Replace if bent or pinched.
+- Backlight on but no image / main PCB not sending video signal → Verify NP110-PCB-MCU boot status via service console. Replace NP110-PCB-MCU if no signal output.
+11.3 TOUCH SCREEN ISSUES:
+- Touch screen unresponsive / touch FPC cable disconnected → Reseat NP110-CBL-TFPC. Verify ZIF latch fully closed.
+- Touch screen unresponsive / touch panel controller fault → Replace NP110-LCD-TP-01.
+- Touch input offset or inaccurate / calibration required → Perform touch calibration: Settings > Calibration > Touch Calibration.
+- Ghost touches / moisture or contamination → Clean touch surface with dry cloth. Recalibrate.
+- Touch does not respond in corner zones / FPC partially disconnected → Reseat NP110-CBL-TFPC fully. Test all zones.
+11.4 DISPLAY ISSUES:
+- Incorrect language or layout / software corrupted or mismatch → Perform software update per Section 10. If unresolved, perform factory reset via service menu.
+- Treatment parameters not saving / flash storage write error → Download service log. Check C014. Clear logs via service menu.
+- Date/time resets at each boot / RTC battery depleted → Replace CR2032 RTC battery on NP110-PCB-MCU.
+11.5 AUDIO ISSUES:
+- No audio output / volume at minimum → Check volume setting: Settings > Audio.
+- No audio output / speaker connector disconnected → Reseat JST connector(s) at NP110-SPK-L / NP110-SPK-R.
+- No audio output / speaker(s) failed → Replace NP110-SPK-L or NP110-SPK-R as applicable.
+- Audio distorted / speaker damaged or housing resonance → Inspect speakers. Replace if damaged. Check for loose internal components.
+11.6 ULTRASOUND OUTPUT ISSUES:
+- No ultrasound output — no error codes / handpiece not connected or not recognized → Check handpiece cable connection. Clean connector contacts.
+- No ultrasound output — E007 displayed / handpiece communication failure → Test with replacement handpiece. If fault follows main unit, replace NP110-PCB-USG.
+- Output energy below set value — C016 / insufficient coupling gel → Apply adequate coupling gel. Ensure full handpiece contact.
+- Output energy below set value — C015 / calibration deviation → Perform output calibration per service menu calibration procedure.
+- Cartridge not recognized — C004 / counterfeit or incompatible cartridge → Use only genuine Newpong cartridges. Contact service if genuine cartridge not recognized.
+- Shot count not decrementing / cartridge EEPROM write failure → Replace cartridge. Review E008 error log.
+11.7 COMMUNICATION/USB ISSUES:
+- USB drive not detected during update (format incorrect) → Reformat as FAT32 (no exFAT/NTFS). Ensure .npkg at root level.
+- USB drive not detected (USB port fault) → Test with different USB drive. Inspect USB port for debris or bent pins.
+- Service data download fails (write-protected) → Check USB drive write-protect switch. Use different drive.
+
+=== SECTION 12 — POST-REPAIR INSPECTION ===
+WARNING: Do not return the device to clinical use until ALL checks are completed and ALL results are within specification. Document all results, technician name, and date.
+12.1 APPEARANCE INSPECTION:
+- Enclosure completeness: All covers and panels reinstalled. No missing fasteners.
+- Labels and markings: All regulatory labels, serial number, and rating labels present and legible.
+- No visible damage: No cracks, dents, or sharp edges on enclosure or accessories.
+- Connector condition: All external connectors clean, undamaged, and properly seated.
+- Power cord condition: No fraying, cuts, or damage. Connector fully seated in IEC inlet.
+- Rubber feet: All 4 rubber feet (NP110-FEET-01) in place and secure.
+12.2 POWER AND OPERATION CHECK:
+- Mains power connection: Device powers on without issue.
+- Boot sequence: Normal boot without error messages or hanging.
+- Home screen display: All UI elements visible.
+- Power indicator LED: Green LED during standby.
+- Date and time: Correct. Reset if required.
+- Software version: Confirm matches expected version in service record.
+12.3 HANDPIECE AND CARTRIDGE CHECK:
+- Handpiece connection: Cable connects and locks securely in main unit port.
+- Handpiece recognition: Device recognizes handpiece within 3 seconds of connection.
+- Cartridge recognition DS (4.5 mm): Device recognizes and displays CT-110-DS correctly.
+- Cartridge recognition MF (3.0 mm): Device recognizes and displays CT-110-MF correctly.
+- Cartridge recognition SC (1.5 mm): Device recognizes and displays CT-110-SC correctly.
+- Cartridge recognition BF (6.0 mm): Device recognizes and displays CT-110-BF correctly (if applicable).
+- Cartridge shot count display: Remaining shot count displayed correctly for each cartridge.
+12.4 DISPLAY AND AUDIO CHECK:
+- LCD display quality: No dead pixels, lines, or artifacts across entire display area.
+- LCD backlight uniformity: Uniform brightness. No dark zones.
+- Touch screen response — all zones: Touch responds accurately in all zones including corners. Run touch calibration test.
+- Touch screen calibration: Settings > Calibration > Touch Calibration.
+- Audio — system sounds: All system sounds (button feedback, treatment tones, completion chime) audible at normal volume.
+- Audio quality: No distortion or crackling at any volume level.
+12.5 ULTRASOUND OUTPUT VERIFICATION:
+- Output energy DS (4.5 mm): Measured output energy within ±10% of set value at standard test setting.
+- Output energy MF (3.0 mm): Measured output energy within ±10% of set value at standard test setting.
+- Output energy SC (1.5 mm): Measured output energy within ±10% of set value at standard test setting.
+- Output cutoff on cartridge removal: Ultrasound output stops immediately upon cartridge removal.
+- Output cutoff on handpiece disconnection: Ultrasound output stops immediately upon handpiece cable disconnection.
+12.6 SAFETY FUNCTION VERIFICATION:
+- Protective earth continuity: PE impedance ≤0.2 Ω between PE terminal and accessible metal parts (IEC 60601-1 §8.6).
+- Enclosure leakage current — normal condition: ≤100 μA AC (IEC 60601-1 §8.7).
+- Enclosure leakage current — single fault (SFC): ≤500 μA AC.
+- Patient leakage current — applied part (BF): ≤100 μA AC (normal condition).
+- Thermal shutdown function: Verify thermal protection activates correctly via service test mode if equipped.
+- Output disable on error: Verify treatment output disabled when E-series error code is active.
+12.7 INSPECTION CHECK SHEET — Complete and retain in device service record:
+Inspection items: 12.1 Appearance enclosure/labels; 12.1 No damage/fasteners; 12.2 Boot/home screen; 12.2 LED indicator; 12.2 Software version (record version); 12.3 Handpiece recognition; 12.3 Cartridge recognition DS; 12.3 Cartridge recognition MF; 12.3 Cartridge recognition SC; 12.3 Cartridge recognition BF (if applicable); 12.4 LCD quality; 12.4 Touch screen all zones; 12.4 Audio; 12.5 Output energy DS (Measured: ___ J, Set: ___ J); 12.5 Output energy MF (Measured: ___ J, Set: ___ J); 12.5 Output energy SC (Measured: ___ J, Set: ___ J); 12.5 Output cutoff on removal; 12.6 PE continuity (Measured: ___ Ω, Limit ≤0.2 Ω); 12.6 Enclosure leakage normal (Measured: ___ μA, Limit ≤100 μA); 12.6 Patient leakage BF (Measured: ___ μA, Limit ≤100 μA); 12.6 Output disable on error.
+Service Record: Device Serial Number, Service Date, Service Performed By, Service Organization, Overall Result (PASS/FAIL), Authorized Signature.
+
+=== SECTION 13 — QUALITY WARRANTY ===
+WARRANTY PERIODS: Main unit (NP-110 console) — 12 months from shipment. Handpiece (HP-110) — 12 months from shipment. Handpiece cable — 6 months from shipment. Cartridges (all types) — 90 days or 10,000 shots whichever comes first. Accessories (power cord etc.) — 6 months from shipment.
+WARRANTY CONDITIONS: Device operated per service manual and user manual. Service by Newpong-authorized personnel with genuine parts. Not subjected to misuse, accident, or unauthorized modification. Warranty registered within 30 days of shipment.
+WARRANTY EXCLUSIONS: Consumables (cartridges, coupling gel, fuses). Damage from misuse, mishandling, accident, or unauthorized modification. Normal wear and tear. Operation outside environmental conditions. Non-Newpong parts or accessories. Installation/deinstallation/shipping costs.
+WARRANTY SERVICE: Contact Newpong technical support or authorized distributor for RMA number. Provide: device model, serial number, proof of purchase date, description of defect, and RMA number. Newpong will repair or replace within 15 business days of receipt.
+CONTACT: Technical Support: service [at] newpong.com | General: info [at] newpong.com | Website: www.newpong.com | Service Hours: Monday–Friday 09:00–18:00 KST (UTC+9)
+
+--- END OF KNOWLEDGE BASE | NPSVM-110-EN Rev. 04 | December 2025 | © 2025 Newpong Co., Ltd. ---`;
+
+// ============================================================
+// init via DOMContentLoaded below
+
+  apiKey = val; sessionStorage.setItem('np110_apikey', val);
+  document.getElementById('apiBanner').classList.add('hidden');
+}
+
+function setLanguage(lang) { selectedLanguage = lang; }
+
+function selectCategory(cat) {
+  document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('active'));
+  hideResponse();
+  if (selectedCategory === cat) { selectedCategory = null; return; }
+  selectedCategory = cat; selectedSubcategory = null;
+  const panel = document.getElementById('panel-' + cat);
+  if (panel) panel.classList.add('visible');
+  const catOrder = ['main-unit','cartridges','handpiece','error-codes','cables','post-repair'];
+  const idx = catOrder.indexOf(cat);
+  const tiles = document.querySelectorAll('.cat-tile');
+  if (idx >= 0 && tiles[idx]) tiles[idx].classList.add('active');
+  setTimeout(() => { if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 80);
+}
+
+function closePanel(cat) {
+  document.getElementById('panel-' + cat).classList.remove('visible');
+  document.querySelectorAll('.cat-tile').forEach(t => t.classList.remove('active'));
+  selectedCategory = null;
+}
+
+function selectSub(cat, sub) {
+  selectedSubcategory = sub;
+  document.querySelectorAll('#panel-' + cat + ' .sub-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  const input = document.getElementById('input-' + cat);
+  if (input) input.value = sub;
+}
+
+function selectErrorCode(val) {
+  if (!val) return;
+  const opt = document.querySelector('#errorCodeSelect option[value="' + val + '"]');
+  const input = document.getElementById('input-error-codes');
+  if (input && opt) input.value = val + ' — ' + opt.text.split('—').slice(1).join('—').trim();
+}
+
+function submitSearch() {
+  const q = document.getElementById('searchBar').value.trim();
+  if (!q) return;
+  callClaude(q, 'Free-text service manual search: ' + q);
+}
+
+function askAI(cat) {
+  const input = document.getElementById('input-' + cat);
+  let q = input ? input.value.trim() : '';
+  if (!q && selectedSubcategory) q = selectedSubcategory;
+  if (!q) { showError('Please select a symptom or describe the issue before asking.'); return; }
+  const labels = { 'main-unit': 'Main Unit', 'cartridges': 'Cartridges', 'error-codes': 'Error & Caution Codes', 'handpiece': 'Handpiece', 'cables': 'Cables & Connectors', 'post-repair': 'Post-Repair Inspection' };
+  callClaude(q, 'Category: ' + (labels[cat] || cat) + '. Query: ' + q);
+}
+
+async function callClaude(query, context) {
+  if (!apiKey) {
+    showError('Please enter your Anthropic API key first.');
+    return;
+  }
+  showLoading(true); hideResponse(); hideError();
+
+  const systemPrompt = `You are the NEWPONG NP-110 Technical Support Assistant.
+You assist certified service engineers and authorized distributors ONLY.
+You answer questions about the NP-110 LINCURVE PRO based solely on the service manual knowledge base below.
+
+KNOWLEDGE BASE:
+${KB}
+
+SCOPE RULES:
+- Answer ONLY technical service and maintenance questions
+- NEVER provide clinical guidance, treatment protocols, energy settings for patient treatment, or any patient-facing advice
+- If a query is clinical in nature, respond: "This question is outside the scope of technical support. Please contact your clinical trainer or NEWPONG Medical Affairs at info [at] newpong.com" then end with [ESCALATE]
+- NEVER estimate or approximate technical values — only state values exactly as written in the knowledge base
+- If information is not in the knowledge base, respond in the user's language: "I cannot find this information in the NP-110 service manual (NPSVM-110-EN Rev. 04). Please contact NEWPONG Technical Support: service [at] newpong.com" then end with [ESCALATE]
+
+DNT RULES (Do Not Translate — keep in English regardless of language selected):
+- All part numbers: NP110-PCB-USG, NP110-PSU-01, CT-110-DS, NP110-CBL-LVDS, etc.
+- All error and caution codes: E001–E008, C001–C024
+- All model names: NP-110, LINCURVE PRO, HP-110, HC-110, LINCURVE PRO
+- Document references: NPSVM-110-EN Rev. 04, NPUM-110-EN
+- All standard references: IEC 60601-1, CISPR 11, IEC 61000-4-2, etc.
+- All screw sizes, torque values, measurement units, frequencies, voltages
+
+ANSWER FORMAT:
+- Respond in: ${selectedLanguage}
+- Keep all DNT terms in English
+- Procedures: numbered steps
+- Specifications: exact values with units as in manual
+- Warnings/Cautions/Danger: reproduce full notice (condition, consequence, required action)
+- End with citation: [NP-110 | Section X.X | NPSVM-110-EN Rev. 04]
+- Multiple sections: [NP-110 | Sections 9.2, 11.6 | NPSVM-110-EN Rev. 04]
+
+ESCALATION: If not in knowledge base or clinical question, end with: [ESCALATE]`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: systemPrompt, messages: [{ role: 'user', content: context + '\n\nResponse language: ' + selectedLanguage + '. All part numbers, codes, and technical identifiers must remain in English.' }] })
+    });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || 'API error ' + res.status); }
+    const data = await res.json();
+    const rawText = data.content?.[0]?.text || 'No response received.';
+    showLoading(false); displayResponse(query, rawText);
+  } catch (err) {
+    showLoading(false);
+    showError('API Error: ' + err.message + ' — Check your API key and try again.');
+  }
+}
+
+function displayResponse(query, text) {
+  const citationMatch = text.match(/\[NP-110[^\]]+\]/g);
+  const escalate = text.includes('[ESCALATE]');
+  let clean = text.replace(/\[ESCALATE\]/g, '').replace(/\[NP-110[^\]]+\]/g, '').trim();
+  document.getElementById('responseTitle').textContent = query.length > 70 ? query.substring(0, 70) + '…' : query;
+  document.getElementById('responseText').textContent = clean;
+  const cit = document.getElementById('responseCitation');
+  if (citationMatch && citationMatch.length > 0) { cit.textContent = citationMatch.join(' · '); cit.style.display = 'block'; } else { cit.style.display = 'none'; }
+  const sb = document.getElementById('supportBtn');
+  escalate ? sb.classList.remove('hidden') : sb.classList.add('hidden');
+  document.getElementById('thumbUp').classList.remove('active-up');
+  document.getElementById('thumbDown').classList.remove('active-down');
+  document.getElementById('responseArea').classList.add('visible');
+  setTimeout(() => document.getElementById('responseArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+}
+
+function hideResponse() { document.getElementById(
+
+var _PW = "newpong2026";
+function showPasswordGate(){
+  var ok=sessionStorage.getItem('np110_ok');
+  var el=document.getElementById('pwOverlay');
+  if(!el)return;
+  if(ok==='1'){el.classList.add('hidden');}
+  else{el.classList.remove('hidden');setTimeout(function(){var i=document.getElementById('pwInput');if(i)i.focus();},150);}
+}
+function checkPassword(){
+  var inp=document.getElementById('pwInput');
+  var err=document.getElementById('pwError');
+  if(!inp)return;
+  if(inp.value===_PW){
+    sessionStorage.setItem('np110_ok','1');
+    document.getElementById('pwOverlay').classList.add('hidden');
+    if(err)err.textContent='';
+  } else {
+    if(err)err.textContent='Incorrect password. Contact NEWPONG for access.';
+    inp.value='';
+    inp.classList.add('shake');
+    setTimeout(function(){inp.classList.remove('shake');inp.focus();},400);
+  }
+}
+document.addEventListener('DOMContentLoaded',function(){showPasswordGate();});
+
+</script>
+</body>
+</html>
